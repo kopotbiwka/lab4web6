@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News App Demo</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+    <main>
+        <header>
+            <a class="logo" href="/">News Demo</a>
+            <form action="/search" method="GET">
+                <input autofocus class="search-input" value="{{ .SearchKey }}"
+                placeholder="Enter a news topic" type="search" name="q">
+            </form>
+            <!-- Ссылка на GitHub репозиторий из статьи, можно изменить или убрать -->
+            <a href="https://github.com/freshman-tech/news" class="button github-button" target="_blank" rel="noopener noreferrer">View on Github</a>
+        </header>
+
+        <section class="container">
+            <!-- Отображение количества результатов и текущей страницы -->
+            <!-- Условие `if .Results` проверяет, что поле Results не nil (т.е. был поиск) -->
+            {{ if .Results }}
+                <div class="result-count">
+                    {{ if gt .Results.TotalResults 0 }}
+                        <p>
+                            About <strong>{{ .Results.TotalResults }}</strong> results were found.
+                            {{ if gt .TotalPages 0 }} <!-- Показываем инфо о страницах, только если они есть -->
+                            You are on page <strong>{{ .QueryPage }}</strong> of <strong> {{ .TotalPages }}</strong>.
+                            {{ end }}
+                        </p>
+                    {{ else if and (ne .SearchKey "") (eq .Results.TotalResults 0) }}
+                        <p>No results found for your query: <strong>{{ .SearchKey }}</strong>.</p>
+                    {{ end }}
+                </div>
+            {{ else if .SearchKey }} <!-- Если был SearchKey, но Results еще нет (например, пустой поиск) -->
+                <div class="result-count">
+                     <p>Enter a search term to find news.</p>
+                </div>
+            {{ end }}
+
+            <!-- Список новостей -->
+            <ul class="search-results">
+                {{ if .Results }} <!-- Показываем статьи, только если .Results существует -->
+                    {{ range .Results.Articles }}
+                        <li class="news-article">
+                            <div>
+                                <a target="_blank" rel="noreferrer noopener" href="{{.URL}}">
+                                    <h3 class="title">{{.Title }}</h3>
+                                </a>
+                                <p class="description">{{ .Description }}</p>
+                                <div class="metadata">
+                                    <span class="source">{{ .Source.Name }}</span>
+                                    <time class="published-date">{{ .FormatPublishedDate }}</time>
+                                </div>
+                            </div>
+                            {{ if .URLToImage }}
+                            <img class="article-image" src="{{ .URLToImage }}" alt="{{ .Title }}">
+                            {{ else }}
+                            <!-- Можно добавить плейсхолдер, если картинки нет, или просто не выводить img -->
+                            <img class="article-image" src="https://via.placeholder.com/150x100.png?text=No+Image" alt="No image available">
+                            {{ end }}
+                        </li>
+                    {{ end }}
+                {{ end }}
+            </ul>
+
+            <!-- Пагинация -->
+            {{ if and .Results (gt .TotalPages 1) }} <!-- Показываем пагинацию, если есть результаты и больше одной страницы -->
+                <div class="pagination">
+                    <!-- Кнопка "Previous" -->
+                    {{ if gt .QueryPage 1 }}
+                        <a href="/search?q={{ .SearchKey }}&page={{ .PrevPageLink }}" class="button previous-page">Previous</a>
+                    {{ end }}
+
+                    <!-- Кнопка "Next" -->
+                    {{ if not .IsLastPage }}
+                        <a href="/search?q={{ .SearchKey }}&page={{ .NextPageLink }}" class="button next-page">Next</a>
+                    {{ end }}
+                </div>
+            {{ end }}
+        </section>
+    </main>
+</body>
+</html>
